@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Properties>
+		<Property name="filename">application.log</Property>
+	</Properties>
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36}.%M.%L - %msg%n" />
+		</Console>
+		<RandomAccessFile name="File" fileName="${filename}" immediateFlush="false">
+			<PatternLayout>
+				<Pattern>%d{ISO8601} %5p %c{3} %M.%L - %m%n</Pattern>
+			</PatternLayout>
+		</RandomAccessFile>
+		
+		<RollingRandomAccessFile name="RollingFile" fileName="logs/app.log"
+			filePattern="logs/app-%d{yyyy-MM-dd}-%i.log.gz" immediateFlush="false">
+			<PatternLayout>
+				<Pattern>%d{ISO8601} %5p %c{3} %M.%L - %m%n</Pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy/> <!-- interval="6" modulate="true" --> 
+				<SizeBasedTriggeringPolicy size="50 MB" />
+			</Policies>
+		</RollingRandomAccessFile>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="File" />
+			<AppenderRef ref="RollingFile" />
+		</Root>
+	</Loggers>
+</Configuration>
