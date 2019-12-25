@@ -11,11 +11,6 @@ import java.util.List;
 @Log4j2
 public class PowerPointChanger {
 
-    private static final String POWERPOINT_FILE = "Opw 42.pptx";
-    private static final String POWERPOINT_FILE2 = "Opw 585.pptx";
-
-//    private static final Logger log = LogManager.getLogger(PowerPointChanger.class.getName());
-
     public static void main(String[] args) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -29,7 +24,6 @@ public class PowerPointChanger {
         int failedCount = 0, goodCount = 0;
         for (File file : fileList) {
             try {
-                log.info("Stats: Good: {}. Failed: {}", goodCount, failedCount);
                 manipulator.processPowerpointFile(file);
                 goodCount++;
             } catch (Exception e){
@@ -37,6 +31,7 @@ public class PowerPointChanger {
                 failedCount++;
             }
         }
+        log.info("Stats: processed good: {}, failed: {}", goodCount, failedCount);
 
         memStats();
         stopWatch.stop();
@@ -46,7 +41,6 @@ public class PowerPointChanger {
     private static List<File> getFileListFromPath(final File directory) {
         return (LinkedList<File>) FileUtils.listFiles(directory, new String[]{"pptx"}, true);
     }
-
 
     private static void memStats() {
         long heapSize = Runtime.getRuntime().totalMemory();

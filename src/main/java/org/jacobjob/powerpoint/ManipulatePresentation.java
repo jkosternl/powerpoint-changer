@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 @Log4j2
 public class ManipulatePresentation {
@@ -29,17 +30,19 @@ public class ManipulatePresentation {
         }
 
         File newFilename = new File(powerPointFile.getAbsolutePath().replaceFirst("Databank", "Databank-output"));
-        storeSlideshow(ppt, newFilename);
+        storeSlideshow(ppt, newFilename, powerPointFile.lastModified());
         ppt.close();
     }
 
-    private void storeSlideshow(XMLSlideShow ppt, final File outputFile) throws IOException {
+    private void storeSlideshow(XMLSlideShow ppt, final File outputFile, long lastModified) throws IOException {
         log.info("Writing to: {}", outputFile);
         outputFile.getParentFile().mkdirs();
         outputFile.delete();
         FileOutputStream out = new FileOutputStream(outputFile);
         ppt.write(out);
         out.close();
+        //Restore last modified date (from old file)
+        outputFile.setLastModified(lastModified);
     }
 
     private void manipulateSlide(XSLFSlide slide) {
@@ -48,7 +51,7 @@ public class ManipulatePresentation {
         final ArrayList<XSLFShape> removeList = new ArrayList<>();
         for (final XSLFShape shape : slide.getShapes()) {
             shapeCounter++;
-            log.info("Shape {} = name: {}", shapeCounter, shape.getShapeName());
+            log.debug("Shape {} = name: {}", shapeCounter, shape.getShapeName());
             if (shape instanceof XSLFTextShape) {
                 XSLFTextShape textShape = (XSLFTextShape) shape;
                 //Remove line boxes created with text boxes, which we don't like.
@@ -56,7 +59,7 @@ public class ManipulatePresentation {
                     removeList.add(textShape);
                     continue;
                 }
-                changeFontSize(textShape);
+                changeTextFontSize(textShape);
                 changeTextboxSize(textShape);
             } else if (shape instanceof XSLFPictureShape) {
                 XSLFPictureShape pictureShape = (XSLFPictureShape) shape;
@@ -70,7 +73,7 @@ public class ManipulatePresentation {
             }
         }
         for (final XSLFShape shape : removeList) {
-            log.info("Removed: {}", shape.getShapeName());
+            log.debug("Removed: {}", shape.getShapeName());
             slide.removeShape(shape);
         }
     }
@@ -98,7 +101,7 @@ public class ManipulatePresentation {
         return anchor;
     }
 
-    private void changePictureLocation(XSLFPictureShape pictureShape) {
+    private void changePictureLocation(final XSLFPictureShape pictureShape) {
         final Rectangle2D anchor = pictureShape.getAnchor();
         // If this is a full screen picture, do not move it to the right.
         if (anchor.getX() < newXPosition) {
@@ -115,7 +118,15 @@ public class ManipulatePresentation {
         //Skip only titles
         int textLength = textShape.getText().length();
         final Rectangle2D anchor = textShape.getAnchor();
-        if (textLength < 40) {
+        if (textLength < 4) {
+            //Signs as '>>'
+            if (textLength >= 2 && textShape.getText().startsWith(">>")) {
+                //Move a bit down and right, for new sized slide
+                anchor.setFrame(anchor.getX() + 20, anchor.getY() + 110, anchor.getWidth(), anchor.getHeight());
+            } else {
+                return;
+            }
+        } else if (textLength < 40) {
             anchor.setFrame(newXPosition, anchor.getY(), anchor.getWidth(), anchor.getHeight());
             log.info("Changed ONLY frame position - likely title. Contents: '{}'", textShape.getText());
         } else {
@@ -125,19 +136,38 @@ public class ManipulatePresentation {
         textShape.setAnchor(anchor);
     }
 
-    private void changeFontSize(final XSLFTextShape textShape) {
+    private void changeTextFontSize(final XSLFTextShape textShape) {
         final int lines = textShape.getText().split("\n").length;
+        //Likely a sign (>>) or a title. Skip it.
+        if (lines <= 2)
+            return;
+        String[] lineLengths = textShape.getText().split("\n");
+        int maxLineLength = Arrays.stream(lineLengths).mapToInt(String::length).max().orElse(0);
+
         textShape.setTextAutofit(TextShape.TextAutofit.SHAPE);
+        log.info("Found lines: {} and maxLineLength: {}", lines, maxLineLength);
         textShape.getTextParagraphs().forEach(paragraph -> {
             for (XSLFTextRun textRun : paragraph.getTextRuns()) {
-                if (lines <= 15) {
-                    textRun.setFontSize(28.);
-                } else if (lines <= 17) {
-                    textRun.setFontSize(24.);
-                } else if (lines <= 19) {
-                    textRun.setFontSize(20.);
+                if (lines <= 12 && maxLineLength <= 33) {
+                    textRun.setFontSize(37.);
+                } else if (lines <= 12 && maxLineLength <= 35) {
+                    textRun.setFontSize(36.);
+                } else if (lines <= 12 && maxLineLength <= 36) {
+                    textRun.setFontSize(34.);
+                } else if (lines <= 13 && maxLineLength <= 38) {
+                    textRun.setFontSize(33.);
+                } else if (lines <= 14 && maxLineLength <= 46) {
+                    textRun.setFontSize(29.);
+                } else if (lines <= 15 && maxLineLength <= 48) {
+                    textRun.setFontSize(26.);
+                } else if (lines <= 16 && maxLineLength <= 55) {
+                    textRun.setFontSize(25.);
+                } else if (lines <= 17 && maxLineLength <= 60) {
+                    textRun.setFontSize(21.);
+                } else if (lines <= 19 && maxLineLength <= 65) {
+                    textRun.setFontSize(17.);
                 } else if (lines <= 21) {
-                    textRun.setFontSize(16.);
+                    textRun.setFontSize(14.);
                 }
             }
         });
