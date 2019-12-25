@@ -33,11 +33,10 @@ public class PowerPointChanger {
                 manipulator.processPowerpointFile(file);
                 goodCount++;
             } catch (Exception e){
-                log.error("Failed processing: {}", file.getName());
+                log.error("Failed processing: {}", file.getName(), e);
                 failedCount++;
             }
         }
-//        manipulator.processPowerpointFile(new File(POWERPOINT_FILE));
 
         memStats();
         stopWatch.stop();

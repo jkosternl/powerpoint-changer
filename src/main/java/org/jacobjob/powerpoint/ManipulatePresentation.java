@@ -15,8 +15,8 @@ import java.util.ArrayList;
 @Log4j2
 public class ManipulatePresentation {
 
-    public static final double newXPosition = 304.2324409448819d;
-    public static final double newYPosition = 14.853543307086614d;
+    public static final double newXPosition = 304d;
+    public static final double newYPosition = 15d;
 
     public void processPowerpointFile(File powerPointFile) throws IOException {
         XMLSlideShow ppt = new XMLSlideShow(new FileInputStream(powerPointFile));
@@ -28,14 +28,18 @@ public class ManipulatePresentation {
             manipulateSlide(slide);
         }
 
-//        storeSlideshow(ppt, "output.pptx");
+        File newFilename = new File(powerPointFile.getAbsolutePath().replaceFirst("Databank", "Databank-output"));
+        storeSlideshow(ppt, newFilename);
+        ppt.close();
     }
 
-    private void storeSlideshow(XMLSlideShow ppt, final String filename) throws IOException {
-        FileOutputStream out = new FileOutputStream(filename);
+    private void storeSlideshow(XMLSlideShow ppt, final File outputFile) throws IOException {
+        log.info("Writing to: {}", outputFile);
+        outputFile.getParentFile().mkdirs();
+        outputFile.delete();
+        FileOutputStream out = new FileOutputStream(outputFile);
         ppt.write(out);
         out.close();
-        ppt.close();
     }
 
     private void manipulateSlide(XSLFSlide slide) {
@@ -45,20 +49,24 @@ public class ManipulatePresentation {
         for (final XSLFShape shape : slide.getShapes()) {
             shapeCounter++;
             log.info("Shape {} = name: {}", shapeCounter, shape.getShapeName());
-            if (shapeCounter > 2) log.warn("Shape = {} - {}", shapeCounter, shape);
             if (shape instanceof XSLFTextShape) {
                 XSLFTextShape textShape = (XSLFTextShape) shape;
+                //Remove line boxes created with text boxes, which we don't like.
+                if (textShape.getText().length() == 0) {
+                    removeList.add(textShape);
+                    continue;
+                }
                 changeFontSize(textShape);
                 changeTextboxSize(textShape);
-            }
-            if (shape instanceof XSLFPictureShape) {
+            } else if (shape instanceof XSLFPictureShape) {
                 XSLFPictureShape pictureShape = (XSLFPictureShape) shape;
                 changePictureLocation(pictureShape);
-                changePictureSize(pictureShape);
-            }
-            if (shape instanceof XSLFGroupShape) {
+                pictureShape.setAnchor(changePictureAnchorSize(pictureShape.getAnchor()));
+            } else if (shape instanceof XSLFGroupShape) {
                 XSLFGroupShape groupShape = (XSLFGroupShape) shape;
                 removeList.add(groupShape);
+            } else {
+                log.warn("Not recognized shape: {}", shape.getShapeName());
             }
         }
         for (final XSLFShape shape : removeList) {
@@ -76,9 +84,18 @@ public class ManipulatePresentation {
         }
     }
 
-    private void changePictureSize(XSLFPictureShape pictureShape) {
-        final Rectangle2D anchor = pictureShape.getAnchor();
+    Rectangle2D changePictureAnchorSize(final Rectangle2D anchor) {
         final double ratio = anchor.getHeight() / anchor.getWidth();
+        double newWidth = 960 - newXPosition - 5;
+        double newHeight = newWidth * ratio;
+        //New width is too large, start again calculations on width.
+        if (newHeight > (540 - newYPosition)) {
+            newHeight = (540 - newYPosition - 5);
+            newWidth = newHeight / ratio;
+        }
+        log.info("Picture resized from (H x W): {} x {} to: {} x {}", anchor.getHeight(), anchor.getWidth(), newHeight, newWidth);
+        anchor.setFrame(anchor.getX(), anchor.getY(), Math.floor(newWidth), Math.floor(newHeight));
+        return anchor;
     }
 
     private void changePictureLocation(XSLFPictureShape pictureShape) {
@@ -99,20 +116,29 @@ public class ManipulatePresentation {
         int textLength = textShape.getText().length();
         final Rectangle2D anchor = textShape.getAnchor();
         if (textLength < 40) {
-            anchor.setFrame(newXPosition, anchor.getY(), anchor.getHeight(), anchor.getWidth());
-            log.info("Changed ONLY frame position - likely title.");
+            anchor.setFrame(newXPosition, anchor.getY(), anchor.getWidth(), anchor.getHeight());
+            log.info("Changed ONLY frame position - likely title. Contents: '{}'", textShape.getText());
         } else {
-            anchor.setFrame(newXPosition, newYPosition, 655.7675590551181d, 540d - 20d);
+            anchor.setFrame(newXPosition, newYPosition, 655d, 540d - 20d);
             log.info("Changed frame size & position");
         }
         textShape.setAnchor(anchor);
     }
 
     private void changeFontSize(final XSLFTextShape textShape) {
+        final int lines = textShape.getText().split("\n").length;
         textShape.setTextAutofit(TextShape.TextAutofit.SHAPE);
         textShape.getTextParagraphs().forEach(paragraph -> {
             for (XSLFTextRun textRun : paragraph.getTextRuns()) {
-                textRun.setFontSize(28.);
+                if (lines <= 15) {
+                    textRun.setFontSize(28.);
+                } else if (lines <= 17) {
+                    textRun.setFontSize(24.);
+                } else if (lines <= 19) {
+                    textRun.setFontSize(20.);
+                } else if (lines <= 21) {
+                    textRun.setFontSize(16.);
+                }
             }
         });
     }
