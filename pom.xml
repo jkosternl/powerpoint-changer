@@ -1,14 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.jacobjob.powerpoint</groupId>
 	<artifactId>powerpoint-changer</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>powerpoint-changer</name>
-	<description>Omzetten van PowerPoint PPTX naar widescreen</description>
+	<description>Converts PowerPoint PPTX files from 4:3-screen to wide screen and optimize other details too
+	</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
