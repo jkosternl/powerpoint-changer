@@ -10,16 +10,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 @Log4j2
 public class ManipulatePresentation {
 
-    public static final double newXPosition = 304d;
-    public static final double newYPosition = 15d;
+    public static final double NEW_X_POSITION = 304d;
+    public static final double NEW_Y_POSITION = 15d;
 
-    public void processPowerpointFile(File powerPointFile) throws IOException {
+    public void processPowerpointFile(final File powerPointFile) throws IOException {
         XMLSlideShow ppt = new XMLSlideShow(new FileInputStream(powerPointFile));
         log.info("Starting with file: {} - Slides found: {}", powerPointFile.getAbsolutePath(), ppt.getSlides().size());
 
@@ -34,10 +35,10 @@ public class ManipulatePresentation {
         ppt.close();
     }
 
-    private void storeSlideshow(XMLSlideShow ppt, final File outputFile, long lastModified) throws IOException {
+    private void storeSlideshow(final XMLSlideShow ppt, final File outputFile, long lastModified) throws IOException {
         log.info("Writing to: {}", outputFile);
         outputFile.getParentFile().mkdirs();
-        outputFile.delete();
+        Files.delete(outputFile.toPath());
         FileOutputStream out = new FileOutputStream(outputFile);
         ppt.write(out);
         out.close();
@@ -45,7 +46,7 @@ public class ManipulatePresentation {
         outputFile.setLastModified(lastModified);
     }
 
-    private void manipulateSlide(XSLFSlide slide) {
+    private void manipulateSlide(final XSLFSlide slide) {
         log.info("Shapes found: {}", slide.getShapes().size());
         int shapeCounter = 0;
         final ArrayList<XSLFShape> removeList = new ArrayList<>();
@@ -89,11 +90,11 @@ public class ManipulatePresentation {
 
     Rectangle2D changePictureAnchorSize(final Rectangle2D anchor) {
         final double ratio = anchor.getHeight() / anchor.getWidth();
-        double newWidth = 960 - newXPosition - 5;
+        double newWidth = 960 - NEW_X_POSITION - 5;
         double newHeight = newWidth * ratio;
         //New width is too large, start again calculations on width.
-        if (newHeight > (540 - newYPosition)) {
-            newHeight = (540 - newYPosition - 5);
+        if (newHeight > (540 - NEW_Y_POSITION)) {
+            newHeight = (540 - NEW_Y_POSITION - 5);
             newWidth = newHeight / ratio;
         }
         log.info("Picture resized from (H x W): {} x {} to: {} x {}", anchor.getHeight(), anchor.getWidth(), newHeight, newWidth);
@@ -104,12 +105,12 @@ public class ManipulatePresentation {
     private void changePictureLocation(final XSLFPictureShape pictureShape) {
         final Rectangle2D anchor = pictureShape.getAnchor();
         // If this is a full screen picture, do not move it to the right.
-        if (anchor.getX() < newXPosition) {
+        if (anchor.getX() < NEW_X_POSITION) {
             return;
         }
         double height = anchor.getHeight();
         double width = anchor.getWidth();
-        anchor.setFrame(newXPosition, anchor.getY(), height, width);
+        anchor.setFrame(NEW_X_POSITION, anchor.getY(), height, width);
         pictureShape.setAnchor(anchor);
         log.info("Picture adjusted");
     }
@@ -127,10 +128,10 @@ public class ManipulatePresentation {
                 return;
             }
         } else if (textLength < 40) {
-            anchor.setFrame(newXPosition, anchor.getY(), anchor.getWidth(), anchor.getHeight());
+            anchor.setFrame(NEW_X_POSITION, anchor.getY(), anchor.getWidth(), anchor.getHeight());
             log.info("Changed ONLY frame position - likely title. Contents: '{}'", textShape.getText());
         } else {
-            anchor.setFrame(newXPosition, newYPosition, 655d, 540d - 20d);
+            anchor.setFrame(NEW_X_POSITION, NEW_Y_POSITION, 655d, 540d - 20d);
             log.info("Changed frame size & position");
         }
         textShape.setAnchor(anchor);

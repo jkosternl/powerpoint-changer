@@ -11,13 +11,15 @@ import java.util.List;
 @Log4j2
 public class PowerPointChanger {
 
+    public static final String PRESENTATIONS_DIR = "D:/Temp/Databank";
+
     public static void main(String[] args) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         log.info("Starting");
         memStats();
 
-        List<File> fileList = getFileListFromPath(new File("D:/Temp/Databank"));
+        List<File> fileList = getFileListFromPath(new File(PRESENTATIONS_DIR));
         log.info("Found {}", fileList.size());
 
         ManipulatePresentation manipulator = new ManipulatePresentation();
