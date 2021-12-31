@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ManipulatePresentationTest {
 
-    private ManipulatePresentation manipulator = new ManipulatePresentation();
+    private final ManipulatePresentation manipulator = new ManipulatePresentation();
 
     @Test
     void changePictureAnchorSizeSquare() {
