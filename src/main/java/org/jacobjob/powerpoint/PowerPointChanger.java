@@ -23,7 +23,8 @@ public class PowerPointChanger {
         log.info("Found {}", fileList.size());
 
         ManipulatePresentation manipulator = new ManipulatePresentation();
-        int failedCount = 0, goodCount = 0;
+        int failedCount = 0;
+            int goodCount = 0;
         for (File file : fileList) {
             try {
                 manipulator.processPowerpointFile(file);
@@ -37,7 +38,7 @@ public class PowerPointChanger {
 
         memStats();
         stopWatch.stop();
-        log.info("Programma beeindigd na: {}", stopWatch);
+        log.info("Program ended after: {}", stopWatch);
     }
 
     private static List<File> getFileListFromPath(final File directory) {

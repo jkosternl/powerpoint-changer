@@ -56,7 +56,7 @@ public class ManipulatePresentation {
             if (shape instanceof XSLFTextShape) {
                 XSLFTextShape textShape = (XSLFTextShape) shape;
                 //Remove line boxes created with text boxes, which we don't like.
-                if (textShape.getText().length() == 0) {
+                if (textShape.getText().isEmpty()) {
                     removeList.add(textShape);
                     continue;
                 }
