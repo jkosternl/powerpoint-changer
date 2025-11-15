@@ -5,8 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 
 import java.io.File;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collection;
 
 @Log4j2
 public class PowerPointChanger {
@@ -19,7 +18,7 @@ public class PowerPointChanger {
         log.info("Starting");
         memStats();
 
-        List<File> fileList = getFileListFromPath(new File(PRESENTATIONS_DIR));
+        Collection<File> fileList = getFileListFromPath(new File(PRESENTATIONS_DIR));
         log.info("Found {}", fileList.size());
 
         ManipulatePresentation manipulator = new ManipulatePresentation();
@@ -41,8 +40,8 @@ public class PowerPointChanger {
         log.info("Program ended after: {}", stopWatch);
     }
 
-    private static List<File> getFileListFromPath(final File directory) {
-        return (LinkedList<File>) FileUtils.listFiles(directory, new String[]{"pptx"}, true);
+    private static Collection<File> getFileListFromPath(final File directory) {
+        return FileUtils.listFiles(directory, new String[]{"pptx"}, true);
     }
 
     private static void memStats() {
